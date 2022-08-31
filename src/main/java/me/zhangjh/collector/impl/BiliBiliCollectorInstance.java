@@ -14,6 +14,10 @@ import org.jsoup.nodes.Document;
 import org.springframework.util.Assert;
 
 import java.io.File;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zhangjh
@@ -22,6 +26,11 @@ import java.io.File;
 public abstract class BiliBiliCollectorInstance {
 
     protected CloseableHttpClient client = HttpClients.createDefault();
+
+    protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
+            10, 20, 5,TimeUnit.MINUTES,
+            new ArrayBlockingQueue<>(50), Executors.defaultThreadFactory(),
+                    new ThreadPoolExecutor.CallerRunsPolicy());
 
     protected void mkdir(String downloadPath) {
         // 创建下载路径

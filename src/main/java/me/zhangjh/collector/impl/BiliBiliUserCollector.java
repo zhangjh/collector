@@ -36,7 +36,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             Torrent torrent = JSONObject.parseObject(qValue, Torrent.class);
             System.out.println("start handle: " + torrent.getName());
             this.handle(torrent.getUrl(), context);
-            qValue = jedis.lpop(context.getRedisBucket());
+            qValue = jedis.rpop(context.getRedisBucket());
         }
     }
 
@@ -62,16 +62,16 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
                 jedis.lpush(context.getRedisBucket() + "/urls" ,channelItemHref);
             }
             driver.navigate().back();
-            Thread.sleep(2000);
         }
         String qValue = jedis.rpop(context.getRedisBucket() + "/urls");
         while (StringUtils.isNotBlank(qValue)) {
-            // todo: 改造成多线程下载(丢到线程池里，再从线程池取任务执行)
-            System.out.println("download：" + qValue);
             if(!qValue.startsWith("https")) {
                 qValue = "https:" + qValue;
             }
-            DownloadUtil.download(context.getDownloadPath(), qValue);
+
+            final String finalResUrl = qValue;
+            executors.submit(() -> DownloadUtil.download(context.getDownloadPath(), finalResUrl));
+            qValue = jedis.rpop(context.getRedisBucket() + "/urls");
         }
     }
 }
