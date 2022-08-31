@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class BiliBiliCollectorFactory {
                 if(biliTypeEnum.isPresent()) {
                     BiliBiliCollectorInstance collector = getInstance(biliTypeEnum.get());
                     context.setTorrent(torrent);
-                    context.setDownloadPre(downloadPre);
+                    context.setDownloadPre(new String(downloadPre.getBytes(StandardCharsets.UTF_8)));
                     context.setRedisBucket(redisBucket);
                     context.setJedis(new Jedis(redisHost, redisPort));
                     collector.run(context);
