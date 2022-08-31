@@ -64,11 +64,11 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             driver.navigate().back();
         }
         String qValue = jedis.rpop(context.getRedisBucket() + "/urls");
+        System.out.println("qValue: " + qValue);
         while (StringUtils.isNotBlank(qValue)) {
             if(!qValue.startsWith("https")) {
                 qValue = "https:" + qValue;
             }
-
             final String finalResUrl = qValue;
             executors.submit(() -> DownloadUtil.download(context.getDownloadPath(), finalResUrl));
             qValue = jedis.rpop(context.getRedisBucket() + "/urls");
