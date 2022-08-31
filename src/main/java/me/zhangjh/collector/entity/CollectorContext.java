@@ -1,6 +1,7 @@
 package me.zhangjh.collector.entity;
 
 import lombok.Data;
+import org.openqa.selenium.WebDriver;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -9,6 +10,8 @@ import redis.clients.jedis.Jedis;
  */
 @Data
 public class CollectorContext {
+    private WebDriver webDriver;
+
     private Torrent torrent;
 
     private String downloadPre;

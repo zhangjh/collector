@@ -1,12 +1,18 @@
 package me.zhangjh.collector.impl;
 
+import me.zhangjh.collector.crawler.Crawler;
 import me.zhangjh.collector.entity.BiliTypeEnum;
 import me.zhangjh.collector.entity.CollectorContext;
 import me.zhangjh.collector.entity.Torrent;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -41,16 +47,29 @@ public class BiliBiliCollectorFactory {
     }
 
     public void run(Torrent torrent) {
-        String type = torrent.getType();
-        Optional<BiliTypeEnum> biliTypeEnum = BiliTypeEnum.getEnumByType(type);
-        if(biliTypeEnum.isPresent()) {
-            BiliBiliCollectorInstance collector = getInstance(biliTypeEnum.get());
-            CollectorContext context = new CollectorContext();
-            context.setTorrent(torrent);
-            context.setDownloadPre(downloadPre);
-            context.setRedisBucket(redisBucket);
-            context.setJedis(new Jedis(redisHost, redisPort));
-            collector.run(context);
+        Crawler crawler = new Crawler();
+        WebDriver driver = crawler.getDriver();
+        CollectorContext context = new CollectorContext();
+        context.setWebDriver(driver);
+        try {
+            String type = torrent.getType();
+            Optional<BiliTypeEnum> biliTypeEnum = BiliTypeEnum.getEnumByType(type);
+            if(biliTypeEnum.isPresent()) {
+                BiliBiliCollectorInstance collector = getInstance(biliTypeEnum.get());
+                context.setTorrent(torrent);
+                context.setDownloadPre(downloadPre);
+                context.setRedisBucket(redisBucket);
+                context.setJedis(new Jedis(redisHost, redisPort));
+                collector.run(context);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(driver.getCurrentUrl());
+            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            try {
+                screenshot.createNewFile();
+            } catch (IOException ignored) {
+            }
         }
     }
 }

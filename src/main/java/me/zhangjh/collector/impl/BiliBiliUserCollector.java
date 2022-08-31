@@ -2,7 +2,6 @@ package me.zhangjh.collector.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.SneakyThrows;
-import me.zhangjh.collector.crawler.Crawler;
 import me.zhangjh.collector.entity.CollectorContext;
 import me.zhangjh.collector.entity.Torrent;
 import me.zhangjh.collector.util.DownloadUtil;
@@ -46,9 +45,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
     protected void handle(String url, CollectorContext context) {
         Jedis jedis = context.getJedis();
 
-        Crawler crawler = new Crawler();
-//        Page page = crawler.getPage();
-        WebDriver driver = crawler.getDriver();
+        WebDriver driver = context.getWebDriver();
         driver.get(url);
         Document document = Jsoup.parse(driver.getPageSource());
 
