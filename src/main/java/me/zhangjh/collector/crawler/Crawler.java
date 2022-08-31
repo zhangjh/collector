@@ -11,6 +11,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,7 +51,11 @@ public class Crawler {
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
         options.addArguments(ARG_LIST);
-        return new ChromeDriver(options);
+        ChromeDriver driver = new ChromeDriver(options);
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(5));
+        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(5));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        return driver;
     }
 
     private void hideHeadless(Page page) {
