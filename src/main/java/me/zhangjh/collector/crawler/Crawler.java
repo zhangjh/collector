@@ -42,10 +42,9 @@ public class Crawler {
         driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(50));
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
 
-        JavascriptExecutor js = driver;
         List<String> scripts = hideHeadlessScripts();
         for (String script : scripts) {
-            js.executeScript(script);
+            ((JavascriptExecutor) driver).executeScript(script);
         }
         return driver;
     }
