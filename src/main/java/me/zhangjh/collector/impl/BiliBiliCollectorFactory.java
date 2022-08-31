@@ -68,12 +68,11 @@ public class BiliBiliCollectorFactory {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(driver.getCurrentUrl());
             File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             try {
                 FileUtils.copyFile(screenshot,
-                        new File("../screenshot" + File.separator
-                                + System.currentTimeMillis() + ".png"));
+                        new File(System.getProperty("user.dir") + File.separator
+                                + "screenshot" + File.separator + System.currentTimeMillis() + ".png"));
             } catch (IOException ignored) {
             }
             driver.quit();
