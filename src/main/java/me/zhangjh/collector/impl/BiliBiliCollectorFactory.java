@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
+import javax.imageio.ImageIO;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -67,7 +69,8 @@ public class BiliBiliCollectorFactory {
             System.out.println(driver.getCurrentUrl());
             File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             try {
-                screenshot.createNewFile();
+                ImageIO.write((RenderedImage) screenshot, "png",
+                        new File("../screenshot/" + System.currentTimeMillis()));
             } catch (IOException ignored) {
             }
         }
