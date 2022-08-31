@@ -27,18 +27,16 @@ public class BiliBiliCollectorRunner {
     @PostConstruct
     private void init() {
         List<Torrent> torrentList = torrents.stream().map(torrent -> {
-            System.out.println(torrent);
             String[] split = torrent.split("::");
             String url = split[0];
             String name = split[1];
             String type = split[2];
-            System.out.println("name:" + name);
             return new Torrent(url, name, type);
         }).collect(Collectors.toList());
         getVideos(torrentList);
     }
 
     private void getVideos(List<Torrent> torrents) {
-//        collectorFactory.run(torrents);
+        collectorFactory.run(torrents);
     }
 }
