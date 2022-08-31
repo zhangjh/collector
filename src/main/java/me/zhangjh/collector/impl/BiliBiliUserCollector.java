@@ -12,7 +12,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import redis.clients.jedis.Jedis;
+
+import java.time.Duration;
 
 /**
  * @author zhangjh
@@ -52,22 +56,22 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         Elements content = document.select("#page-channel").select(".content");
         Elements chanelItems = content.select(".channel-item");
 
-        System.out.println("chanelItems size:" + chanelItems.size());
         for (Element chanelItem : chanelItems) {
             // 页面点击还得借助无头浏览器
             driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
+
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".content > .video-list > li")));
+
             Document channelItemDocument = Jsoup.parse(driver.getPageSource());
             Elements channelItemContent = channelItemDocument.select(".content > .video-list > li");
-            System.out.println("channelItemContent size:" + channelItemContent.size());
             for (Element element : channelItemContent) {
                 String channelItemHref = element.select("a").attr("href");
-                System.out.println("channelItemHref: " + channelItemHref);
                 jedis.lpush(context.getRedisBucket() + "/urls" ,channelItemHref);
             }
             driver.navigate().back();
         }
         String qValue = jedis.rpop(context.getRedisBucket() + "/urls");
-        System.out.println("qValue: " + qValue);
         while (StringUtils.isNotBlank(qValue)) {
             if(!qValue.startsWith("https")) {
                 qValue = "https:" + qValue;
