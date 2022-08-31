@@ -9,6 +9,7 @@ import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -22,6 +23,9 @@ import java.util.List;
  */
 @Component
 public class Crawler {
+
+    @Value("${browser.headless}")
+    private boolean headless;
 
     private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
             "--user-agent=" + "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like " +
@@ -49,12 +53,12 @@ public class Crawler {
 
     public WebDriver getDriver() {
         ChromeOptions options = new ChromeOptions();
-        options.setHeadless(true);
+        options.setHeadless(headless);
         options.addArguments(ARG_LIST);
         ChromeDriver driver = new ChromeDriver(options);
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(5));
-        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(5));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(50));
+        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(50));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
         return driver;
     }
 

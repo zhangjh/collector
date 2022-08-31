@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
@@ -43,12 +44,14 @@ public class BiliBiliCollectorFactory {
     @Value("${spring.redis.port}")
     private Integer redisPort;
 
+    @Autowired
+    private Crawler crawler;
+
     private BiliBiliCollectorInstance getInstance(BiliTypeEnum type) {
         return MAP.get(type);
     }
 
     public void run(Torrent torrent) {
-        Crawler crawler = new Crawler();
         WebDriver driver = crawler.getDriver();
         CollectorContext context = new CollectorContext();
         context.setWebDriver(driver);

@@ -17,8 +17,4 @@ public class DownloadUtil {
         System.out.println(commandSb);
         runtime.exec(commandSb.toString()).waitFor();
     }
-
-    public static void main(String[] args) throws Exception {
-        download("./", "https://www.bilibili.com/video/BV1iA4y197K6?spm_id_from=333.999.0.0");
-    }
 }
