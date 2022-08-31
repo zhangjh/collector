@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,8 @@ public class BiliBiliCollectorRunner {
             String url = split[0];
             String name = split[1];
             String type = split[2];
-            System.out.println("name:" + name);
+            System.out.println("name:" + new String(name.getBytes(StandardCharsets.ISO_8859_1),
+                    StandardCharsets.UTF_8));
             return new Torrent(url, name, type);
         }).collect(Collectors.toList());
         getVideos(torrentList);
