@@ -33,8 +33,7 @@ public class BiliBiliCollectorRunner {
             String url = split[0];
             String name = split[1];
             String type = split[2];
-            System.out.println("name:" + new String(name.getBytes(StandardCharsets.ISO_8859_1),
-                    StandardCharsets.UTF_8));
+            System.out.println("name:" + new String(name.getBytes(StandardCharsets.UTF_8)));
             return new Torrent(url, name, type);
         }).collect(Collectors.toList());
         getVideos(torrentList);
