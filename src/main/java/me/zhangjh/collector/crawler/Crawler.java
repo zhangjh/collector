@@ -27,7 +27,7 @@ public class Crawler {
     private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36";
 
     private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
-            "--user-agent=" + USER_AGENT, "--disable-dev-shm-usage", "--remote-debugging-port=9222",
+            "--user-agent=" + USER_AGENT, "--disable-dev-shm-usage",
             "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
             "--start-maximized","--user-data-dir=./userData");
 
