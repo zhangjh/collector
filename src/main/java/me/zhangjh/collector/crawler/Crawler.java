@@ -1,12 +1,5 @@
 package me.zhangjh.collector.crawler;
 
-import com.ruiyun.jvppeteer.core.Puppeteer;
-import com.ruiyun.jvppeteer.core.browser.Browser;
-import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
-import com.ruiyun.jvppeteer.core.page.Page;
-import com.ruiyun.jvppeteer.options.LaunchOptions;
-import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
-import lombok.SneakyThrows;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -37,26 +30,6 @@ public class Crawler {
             "--user-agent=" + USER_AGENT,
             "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
             "--start-maximized","--user-data-dir=./userData");
-
-    @SneakyThrows
-    public Page getPage() {
-        // 第一次自动下载，后续不再下载
-        BrowserFetcher.downloadIfNotExist(null);
-
-        LaunchOptions options = new LaunchOptionsBuilder()
-                .withArgs(ARG_LIST)
-//                .withExecutablePath(chromeExecutablePath)
-                .withHeadless(true).build();
-        options.setDevtools(false);
-        options.setViewport(null);
-        options.setIgnoreDefaultArgs(Arrays.asList("--disable-extensions", "--enable-automation"));
-        Browser browser = Puppeteer.launch(options);
-        Page page = browser.pages().get(0);
-        page.setDefaultNavigationTimeout(0);
-        page.setUserAgent(USER_AGENT);
-        hideHeadless(page);
-        return page;
-    }
 
     public WebDriver getDriver() {
         ChromeOptions options = new ChromeOptions();
@@ -166,12 +139,5 @@ public class Crawler {
                 "        return getParameter(parameter);\n" +
                 "    };}\n");
         return scripts;
-    }
-
-    private void hideHeadless(Page page) {
-        List<String> scripts = hideHeadlessScripts();
-        for (String script : scripts) {
-            page.evaluateOnNewDocument(script);
-        }
     }
 }
