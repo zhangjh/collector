@@ -12,10 +12,16 @@ if [ $? -ne 0 ];then
 fi
 
 ## redis
-docker run --name redis-collector -p 6379:6379 -d redis redis-server --save 60 1 --loglevel warning --requirepass redis_passwd
+docker ps | grep redis-collector
+if [ $? -ne 0 ];then
+    docker run --name redis-collector -p 6379:6379 -d redis redis-server --save 60 1 --loglevel warning --requirepass redis_passwd
+fi
 
 ## 下载安装chromedriver驱动
-apt -y install chromium-chromedriver
+which chromedriver
+if [ $? -ne 0 ];then
+    apt -y install chromium-chromedriver
+fi
 
 ## 安装mvn
 which mvn
