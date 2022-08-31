@@ -6,6 +6,9 @@ import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.LaunchOptions;
 import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
+import lombok.SneakyThrows;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,13 +31,15 @@ public class Crawler {
     @Value("${browser.headless}")
     private boolean headless;
 
+    private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36";
+
     private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
-            "--user-agent=" + "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like " +
-                    "Gecko) Chrome/102.0.0.0 Safari/537.36",
+            "--user-agent=" + USER_AGENT,
             "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
             "--start-maximized","--user-data-dir=./userData");
 
-    public Page getPage() throws Exception {
+    @SneakyThrows
+    public Page getPage() {
         // 第一次自动下载，后续不再下载
         BrowserFetcher.downloadIfNotExist(null);
 
@@ -47,6 +53,7 @@ public class Crawler {
         Browser browser = Puppeteer.launch(options);
         Page page = browser.pages().get(0);
         page.setDefaultNavigationTimeout(0);
+        page.setUserAgent(USER_AGENT);
         hideHeadless(page);
         return page;
     }
@@ -56,20 +63,27 @@ public class Crawler {
         options.setHeadless(headless);
         options.addArguments(ARG_LIST);
         ChromeDriver driver = new ChromeDriver(options);
+        Dimension dimension = new Dimension(1920, 1080);
+        driver.manage().window().setSize(dimension);
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(50));
         driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(50));
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
+
+        JavascriptExecutor js = driver;
+        List<String> scripts = hideHeadlessScripts();
+        for (String script : scripts) {
+            js.executeScript(script);
+        }
         return driver;
     }
 
-    private void hideHeadless(Page page) {
-        page.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36");
-
-        page.evaluateOnNewDocument("() => {\n" +
+    private List<String> hideHeadlessScripts() {
+        List<String> scripts = new ArrayList<>();
+        scripts.add("() => {" +
                 "    const newProto = navigator.__proto__;\n" +
                 "    delete newProto.webdriver;\n" +
-                "    navigator.__proto__ = newProto;");
-        page.evaluateOnNewDocument("() => {\n" +
+                "    navigator.__proto__ = newProto;}");
+        scripts.add("() => {" +
                 "    window.chrome = {};\n" +
                 "    window.chrome.app = {\n" +
                 "        InstallState: 'hehe',\n" +
@@ -79,8 +93,8 @@ public class Crawler {
                 "    };\n" +
                 "    window.chrome.csi = function () {};\n" +
                 "    window.chrome.loadTimes = function () {};\n" +
-                "    window.chrome.runtime = function () {};\n");
-        page.evaluateOnNewDocument("() => {\n" +
+                "    window.chrome.runtime = function () {};}\n");
+        scripts.add("() => {" +
                 "    Object.defineProperty(navigator, 'plugins', {\n" +
                 "        get: () => [\n" +
                 "        {\n" +
@@ -126,19 +140,19 @@ public class Crawler {
                 "            name: 'Native Client',\n" +
                 "        },\n" +
                 "        ],\n" +
-                "    });\n");
-        page.evaluateOnNewDocument("() => {\n" +
+                "    });}\n");
+        scripts.add("() => {" +
                 "    Object.defineProperty(navigator, 'languages', {\n" +
                 "        get: () => ['zh-CN', 'zh', 'en'],\n" +
-                "    });");
-        page.evaluateOnNewDocument("() => {\n" +
+                "    });}");
+        scripts.add("() => {" +
                 "    const originalQuery = window.navigator.permissions.query; //notification伪装\n" +
                 "    window.navigator.permissions.query = (parameters) =>\n" +
                 "        parameters.name === 'notifications'\n" +
                 "        ? Promise.resolve({ state: Notification.permission })\n" +
                 "        : originalQuery(parameters);\n" +
                 "}\n");
-        page.evaluateOnNewDocument("() => {\n" +
+        scripts.add("() => {" +
                 "    const getParameter = WebGLRenderingContext.getParameter;\n" +
                 "    WebGLRenderingContext.prototype.getParameter = function (parameter) {\n" +
                 "        // UNMASKED_VENDOR_WEBGL\n" +
@@ -150,6 +164,14 @@ public class Crawler {
                 "            return 'Intel(R) Iris(TM) Graphics 6100';\n" +
                 "        }\n" +
                 "        return getParameter(parameter);\n" +
-                "    };\n");
+                "    };}\n");
+        return scripts;
+    }
+
+    private void hideHeadless(Page page) {
+        List<String> scripts = hideHeadlessScripts();
+        for (String script : scripts) {
+            page.evaluateOnNewDocument(script);
+        }
     }
 }
