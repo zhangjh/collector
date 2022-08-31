@@ -4,17 +4,13 @@ import me.zhangjh.collector.crawler.Crawler;
 import me.zhangjh.collector.entity.BiliTypeEnum;
 import me.zhangjh.collector.entity.CollectorContext;
 import me.zhangjh.collector.entity.Torrent;
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
+import me.zhangjh.collector.util.WebdriverCaptureUtil;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,13 +67,7 @@ public class BiliBiliCollectorFactory {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-            try {
-                FileUtils.copyFile(screenshot,
-                        new File(System.getProperty("user.dir") + File.separator
-                                + "screenshot" + File.separator + System.currentTimeMillis() + ".png"));
-            } catch (IOException ignored) {
-            }
+            WebdriverCaptureUtil.capture(driver, "screenshot");
         } finally {
             driver.quit();
         }
