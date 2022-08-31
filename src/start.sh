@@ -16,3 +16,12 @@ docker run --name redis-collector -p 6379:6379 -d redis redis-server --save 60 1
 
 ## 下载安装chromedriver驱动
 apt -y install chromium-chromedriver
+
+## 安装mvn
+which mvn
+if [ $? -ne 0 ];then
+    apt -y install maven
+fi
+
+## fatjar启动
+mvn clean package -Dmaven.test.skip=true && mvn spring-boot:run &
