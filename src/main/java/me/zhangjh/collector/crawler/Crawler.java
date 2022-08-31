@@ -22,17 +22,18 @@ import java.util.List;
 @Component
 public class Crawler {
 
+    private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
+            "--user-agent=" + "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like " +
+                    "Gecko) Chrome/102.0.0.0 Safari/537.36",
+            "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
+            "--start-maximized","--user-data-dir=./userData");
+
     public Page getPage() throws Exception {
         // 第一次自动下载，后续不再下载
         BrowserFetcher.downloadIfNotExist(null);
 
-        List<String> argList = Arrays.asList("--no-sandbox","--incognito",
-                "--user-agent=" + "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like " +
-                        "Gecko) Chrome/102.0.0.0 Safari/537.36",
-                "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
-                "--start-maximized","--user-data-dir=./userData");
         LaunchOptions options = new LaunchOptionsBuilder()
-                .withArgs(argList)
+                .withArgs(ARG_LIST)
 //                .withExecutablePath(chromeExecutablePath)
                 .withHeadless(true).build();
         options.setDevtools(false);
@@ -48,6 +49,7 @@ public class Crawler {
     public WebDriver getDriver() {
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
+        options.addArguments(ARG_LIST);
         return new ChromeDriver(options);
     }
 
