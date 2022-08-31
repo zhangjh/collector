@@ -1,5 +1,7 @@
 # collector
-内容采集机器人，目前支持b站内容自动下载，下载机制由[you-get](https://github.com/soimort/you-get)提供支持
+内容采集机器人，目前支持b站内容自动下载，支持后续其他扩展，只需实现对应工厂即可。
+
+下载机制由[you-get](https://github.com/soimort/you-get)提供支持
 
 采集配置可在application.properties定制，定制格式为：
 `bilibili.start.torrents[9]=https://www.bilibili.com/bangumi/play/ss20490::蓝色星球::items`
