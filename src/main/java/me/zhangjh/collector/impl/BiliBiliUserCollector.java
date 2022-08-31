@@ -59,6 +59,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             Elements channelItemContent = channelItemDocument.select(".content > .video-list > li");
             for (Element element : channelItemContent) {
                 String channelItemHref = element.select("a").attr("href");
+                System.out.println("channelItemHref: " + channelItemHref);
                 jedis.lpush(context.getRedisBucket() + "/urls" ,channelItemHref);
             }
             driver.navigate().back();
