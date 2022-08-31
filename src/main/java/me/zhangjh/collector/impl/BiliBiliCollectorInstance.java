@@ -28,8 +28,8 @@ public abstract class BiliBiliCollectorInstance {
     protected CloseableHttpClient client = HttpClients.createDefault();
 
     protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
-            10, 20, 5,TimeUnit.MINUTES,
-            new ArrayBlockingQueue<>(50), Executors.defaultThreadFactory(),
+            2, 5, 10,TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),
                     new ThreadPoolExecutor.CallerRunsPolicy());
 
     protected void mkdir(String downloadPath) {
