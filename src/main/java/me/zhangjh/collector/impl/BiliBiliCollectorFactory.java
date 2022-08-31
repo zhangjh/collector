@@ -16,6 +16,7 @@ import redis.clients.jedis.Jedis;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -51,20 +52,22 @@ public class BiliBiliCollectorFactory {
         return MAP.get(type);
     }
 
-    public void run(Torrent torrent) {
+    public void run(List<Torrent> torrents) {
         WebDriver driver = crawler.getDriver();
         CollectorContext context = new CollectorContext();
         context.setWebDriver(driver);
         try {
-            String type = torrent.getType();
-            Optional<BiliTypeEnum> biliTypeEnum = BiliTypeEnum.getEnumByType(type);
-            if(biliTypeEnum.isPresent()) {
-                BiliBiliCollectorInstance collector = getInstance(biliTypeEnum.get());
-                context.setTorrent(torrent);
-                context.setDownloadPre(downloadPre);
-                context.setRedisBucket(redisBucket);
-                context.setJedis(new Jedis(redisHost, redisPort));
-                collector.run(context);
+            for (Torrent torrent : torrents) {
+                String type = torrent.getType();
+                Optional<BiliTypeEnum> biliTypeEnum = BiliTypeEnum.getEnumByType(type);
+                if(biliTypeEnum.isPresent()) {
+                    BiliBiliCollectorInstance collector = getInstance(biliTypeEnum.get());
+                    context.setTorrent(torrent);
+                    context.setDownloadPre(downloadPre);
+                    context.setRedisBucket(redisBucket);
+                    context.setJedis(new Jedis(redisHost, redisPort));
+                    collector.run(context);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

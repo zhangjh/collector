@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author zhangjh
@@ -25,16 +26,17 @@ public class BiliBiliCollectorRunner {
 
     @PostConstruct
     private void init() {
-        torrents.forEach(torrent -> {
+        List<Torrent> torrentList = torrents.stream().map(torrent -> {
             String[] split = torrent.split("::");
             String url = split[0];
             String name = split[1];
             String type = split[2];
-            getVideos(new Torrent(url, name, type));
-        });
+            return new Torrent(url, name, type);
+        }).collect(Collectors.toList());
+        getVideos(torrentList);
     }
 
-    private void getVideos(Torrent torrent) {
-        collectorFactory.run(torrent);
+    private void getVideos(List<Torrent> torrents) {
+        collectorFactory.run(torrents);
     }
 }
