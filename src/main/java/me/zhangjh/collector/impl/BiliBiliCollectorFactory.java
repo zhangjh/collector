@@ -78,6 +78,7 @@ public class BiliBiliCollectorFactory {
                                 + "screenshot" + File.separator + System.currentTimeMillis() + ".png"));
             } catch (IOException ignored) {
             }
+        } finally {
             driver.quit();
         }
     }
