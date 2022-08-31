@@ -1,0 +1,25 @@
+browser:
+  headless: true
+
+bilibili:
+  download:
+    path: /Users/zhangjh/dev/biliDownload
+  start:
+    torrents:
+      - https://space.bilibili.com/7481602/channel/series::安州牧::user
+      - https://space.bilibili.com/485036141/channel/series::杨利辉::user
+      - https://www.bilibili.com/bangumi/play/ss33585::中国通史::items
+      - https://www.bilibili.com/video/BV1us411k7QM::魔术大揭秘::items
+      - https://www.bilibili.com/video/BV1za411t7db::东方帝王谷::items
+      - https://space.bilibili.com/37663924/channel/series::硬核的半佛仙人::user
+      - https://space.bilibili.com/21740080/channel/series::历史独角兽::user
+      - https://space.bilibili.com/202327371/channel/series::全景历史地理::user
+      - https://space.bilibili.com/9458053/channel/series::李永乐老师::user
+      - https://www.bilibili.com/bangumi/play/ss20490::蓝色星球::items
+
+spring:
+  redis:
+    host: 1.117.220.23
+    port: 6379
+    password: redis_passwd
+    bucket: bilibili.url.queue
