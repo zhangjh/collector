@@ -35,13 +35,13 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
 
         // 加到redis队列尾部
         Jedis jedis = context.getJedis();
-        jedis.lpush(context.getRedisBucket(), JSONObject.toJSONString(context.getTorrent()));
-        String qValue = jedis.rpop(context.getRedisBucket());
+        jedis.rpush(context.getRedisBucket(), JSONObject.toJSONString(context.getTorrent()));
+        String qValue = jedis.lpop(context.getRedisBucket());
         while (StringUtils.isNotBlank(qValue)) {
             Torrent torrent = JSONObject.parseObject(qValue, Torrent.class);
             System.out.println("start handle: " + torrent.getName());
             this.handle(torrent.getUrl(), context);
-            qValue = jedis.rpop(context.getRedisBucket());
+            qValue = jedis.lpop(context.getRedisBucket());
         }
     }
 
@@ -54,10 +54,9 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         driver.get(url);
         Document document = Jsoup.parse(driver.getPageSource());
 
-        Elements content = document.select("#page-channel").select(".content");
+        Elements content = document.select("#page-channel .content");
         Elements chanelItems = content.select(".channel-item");
 
-        String channelTitle = "";
         for (Element chanelItem : chanelItems) {
             // 页面点击还得借助无头浏览器
             driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
@@ -66,24 +65,29 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".content > .video-list > li")));
 
             Document channelItemDocument = Jsoup.parse(driver.getPageSource());
-            channelTitle = channelItemDocument.select(".item.cur").text();
+            String channelTitle = channelItemDocument.select(".item.cur").text();
             Elements channelItemContent = channelItemDocument.select(".content > .video-list > li");
             for (Element element : channelItemContent) {
                 String channelItemHref = element.select("a").attr("href");
-                jedis.lpush(context.getRedisBucket() + "/urls" ,channelItemHref);
+                // 一次push两条：title+url
+                jedis.rpush(context.getRedisBucket() + "/urls", channelTitle);
+                jedis.rpush(context.getRedisBucket() + "/urls", channelItemHref);
             }
             driver.navigate().back();
         }
-        String qValue = jedis.rpop(context.getRedisBucket() + "/urls");
-        while (StringUtils.isNotBlank(qValue)) {
-            if(!qValue.startsWith("https")) {
-                qValue = "https:" + qValue;
+        // 相应地，一次要pop两条
+        String channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
+        String channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
+        while (StringUtils.isNotBlank(channelItemHref)) {
+            if(!channelItemHref.startsWith("https")) {
+                channelItemHref = "https:" + channelItemHref;
             }
-            final String finalResUrl = qValue;
+            final String finalResUrl = channelItemHref;
             String finalChannelTitle = channelTitle;
             executors.submit(() -> DownloadUtil.download(context.getDownloadPath()
                             + File.separator + finalChannelTitle, finalResUrl));
-            qValue = jedis.rpop(context.getRedisBucket() + "/urls");
+            channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
+            channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         }
     }
 }
