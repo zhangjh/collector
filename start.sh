@@ -32,6 +32,6 @@ fi
 ## fatjar启动
 if [ $1 == "package" ];then
     mvn clean package -Dmaven.test.skip=true
-elif
+elseif
     nohup mvn spring-boot:run &
 fi
