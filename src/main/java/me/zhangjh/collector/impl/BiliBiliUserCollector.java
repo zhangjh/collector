@@ -16,6 +16,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import redis.clients.jedis.Jedis;
 
+import java.io.File;
 import java.time.Duration;
 
 /**
@@ -56,6 +57,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         Elements content = document.select("#page-channel").select(".content");
         Elements chanelItems = content.select(".channel-item");
 
+        String channelTitle = "";
         for (Element chanelItem : chanelItems) {
             // 页面点击还得借助无头浏览器
             driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
@@ -64,6 +66,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".content > .video-list > li")));
 
             Document channelItemDocument = Jsoup.parse(driver.getPageSource());
+            channelTitle = channelItemDocument.select(".item.cur").text();
             Elements channelItemContent = channelItemDocument.select(".content > .video-list > li");
             for (Element element : channelItemContent) {
                 String channelItemHref = element.select("a").attr("href");
@@ -77,7 +80,9 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
                 qValue = "https:" + qValue;
             }
             final String finalResUrl = qValue;
-            executors.submit(() -> DownloadUtil.download(context.getDownloadPath(), finalResUrl));
+            String finalChannelTitle = channelTitle;
+            executors.submit(() -> DownloadUtil.download(context.getDownloadPath()
+                            + File.separator + finalChannelTitle, finalResUrl));
             qValue = jedis.rpop(context.getRedisBucket() + "/urls");
         }
     }
