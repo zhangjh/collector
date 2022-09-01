@@ -30,7 +30,6 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
     protected void run(CollectorContext context) {
         String name = context.getTorrent().getName();
         String downloadPath = context.getDownloadPre() + "/" + name;
-        mkdir(downloadPath);
         context.setDownloadPath(downloadPath);
 
         // 加到redis队列尾部
