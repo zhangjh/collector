@@ -48,36 +48,68 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
     @Override
     @SneakyThrows
     protected void handle(String url, CollectorContext context) {
-        Jedis jedis = context.getJedis();
-
         WebDriver driver = context.getWebDriver();
         driver.get(url);
         Document document = Jsoup.parse(driver.getPageSource());
 
         Elements content = document.select("#page-channel .content");
         Elements chanelItems = content.select(".channel-item");
+        // 此处个人合集有两种不同格式
+        if(chanelItems.size() == 0) {
+            chanelItems = content.select(".series-item");
+        }
 
         for (Element chanelItem : chanelItems) {
             // 页面点击还得借助无头浏览器
-            driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
+            Elements hasMore = chanelItem.select(".btn.more-btn");
+            if(hasMore.isEmpty()) {
+                driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
+                collectUrls(driver, context, true);
+            } else {
+                for (Element hasMoreBtn : hasMore) {
+                    driver.findElement(By.cssSelector(hasMoreBtn.cssSelector())).click();
+                    collectUrls(driver, context, true);
+                }
+            }
+        }
+        start2Download(context);
+    }
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".content > .video-list > li")));
+    // 分页递归的时候不需要后退，否则递归会导致多次后退
+    private void collectUrls(WebDriver driver, CollectorContext context, boolean needBack) {
+        Jedis jedis = context.getJedis();
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".content")));
 
-            Document channelItemDocument = Jsoup.parse(driver.getPageSource());
-            String channelTitle = channelItemDocument.select(".item.cur").text();
-            Elements channelItemContent = channelItemDocument.select(".content > .video-list > li");
-            for (Element element : channelItemContent) {
-                String channelItemHref = element.select("a").attr("href");
-                // 一次push两条：title+url
+        Document channelItemDocument = Jsoup.parse(driver.getPageSource());
+        String channelTitle = channelItemDocument.select(".item.cur").text();
+        Elements channelItemContent = channelItemDocument.select(".video-list > li");
+        for (Element element : channelItemContent) {
+            String channelItemHref = element.select("a").attr("href");
+            // 一次push两条：title+url
+            if(StringUtils.isNotBlank(channelTitle) && StringUtils.isNotBlank(channelItemHref)) {
                 jedis.rpush(context.getRedisBucket() + "/urls", channelTitle);
                 jedis.rpush(context.getRedisBucket() + "/urls", channelItemHref);
             }
+        }
+        // 如果有下一页的话翻页获取下一页
+        if(!channelItemDocument.select(".be-pager").attr("style").contains("display: none")) {
+            // 翻到头了
+            if(channelItemDocument.select(".be-pager-next.be-pager-disabled").isEmpty()) {
+                driver.findElement(By.cssSelector(".be-pager-next")).click();
+                collectUrls(driver, context, false);
+            }
+        }
+        if(needBack) {
             driver.navigate().back();
         }
+    }
+
+    private void start2Download(CollectorContext context) {
+        Jedis jedis = context.getJedis();
         // 相应地，一次要pop两条
-        String channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         String channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
+        String channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         while (StringUtils.isNotBlank(channelItemHref)) {
             if(!channelItemHref.startsWith("https")) {
                 channelItemHref = "https:" + channelItemHref;
@@ -85,7 +117,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             final String finalResUrl = channelItemHref;
             String finalChannelTitle = channelTitle;
             executors.submit(() -> DownloadUtil.download(context.getDownloadPath()
-                            + File.separator + finalChannelTitle, finalResUrl));
+                    + File.separator + finalChannelTitle, finalResUrl));
             channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
             channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         }
