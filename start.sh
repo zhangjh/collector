@@ -30,7 +30,7 @@ if [ $? -ne 0 ];then
 fi
 
 ## fatjar启动
-if [ $1 == "package" ];then
+if [ "$1" == "package" ];then
     mvn clean package -Dmaven.test.skip=true
 elseif
     nohup mvn spring-boot:run &
