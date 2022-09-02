@@ -1,7 +1,7 @@
 package me.zhangjh.collector.crawler;
 
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -27,20 +27,21 @@ public class Crawler {
     private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36";
 
     private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
-            "--user-agent=" + USER_AGENT, "--disable-dev-shm-usage",
+            "--user-agent=" + USER_AGENT, "--disable-dev-shm-usage", "enable-automation",
             "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
+            "--disable-extensions","--dns-prefetch-disable","--disable-gpu",
             "--start-maximized","--user-data-dir=./userData");
 
     public WebDriver getDriver() {
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(headless);
         options.addArguments(ARG_LIST);
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
         ChromeDriver driver = new ChromeDriver(options);
-        Dimension dimension = new Dimension(1920, 1080);
-        driver.manage().window().setSize(dimension);
+        driver.manage().window().maximize();
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(50));
-        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(50));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
+        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(5));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
         List<String> scripts = hideHeadlessScripts();
         for (String script : scripts) {
