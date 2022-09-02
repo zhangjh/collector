@@ -1,5 +1,6 @@
 package me.zhangjh.collector.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -12,13 +13,13 @@ import java.util.Arrays;
 public class DownloadUtil {
 
     private static String[] buildDownloadCmd(String downloadPath, String url) {
-        StringBuilder commandSb = new StringBuilder("sh -x ")
-                .append(System.getProperty("user.dir")).append("/src/main/download.sh")
-                .append(" ")
-                .append(downloadPath)
-                .append(" ")
-                .append(url);
-        String[] cmd = {"sh", "-c", commandSb.toString()};
+        String commandSb = "sh -x " +
+                System.getProperty("user.dir") + "/src/main/download.sh" +
+                " " +
+                downloadPath +
+                " " +
+                url;
+        String[] cmd = {"sh", "-c", commandSb};
         System.out.println(Arrays.toString(cmd));
         return cmd;
     }
