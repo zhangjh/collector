@@ -3,4 +3,4 @@
 if [ ! -d $1 ];then
     mkdir -p $1
 fi
-cd $1 && you-get $2
+cd $1 && you-get --playlist $2
