@@ -48,6 +48,7 @@ public class DownloadUtil {
             while ((len = inputStreamReader.read(buffer)) != -1) {
                 output.append(new String(buffer, 0, len));
                 System.out.println(output);
+                Thread.sleep(10000);
             }
             inputStream.close();
         } catch (Exception e) {
