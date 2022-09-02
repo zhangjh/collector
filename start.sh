@@ -5,6 +5,11 @@ if [ $? -ne 0 ];then
     apt -y install docker.io
 fi
 
+which ffmpeg
+if [ $? -ne 0 ];then
+    apt -y install ffmpeg
+fi
+
 ## you-get
 which you-get
 if [ $? -ne 0 ];then

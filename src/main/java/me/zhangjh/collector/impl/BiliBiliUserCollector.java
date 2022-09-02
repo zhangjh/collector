@@ -115,7 +115,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             }
             final String finalResUrl = channelItemHref;
             String finalChannelTitle = channelTitle;
-            executors.submit(() -> DownloadUtil.download(context.getDownloadPath()
+            executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
                     + File.separator + finalChannelTitle, finalResUrl));
             channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
             channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
