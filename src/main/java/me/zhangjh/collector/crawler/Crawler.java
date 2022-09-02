@@ -28,8 +28,8 @@ public class Crawler {
 
     private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
             "--user-agent=" + USER_AGENT, "--disable-dev-shm-usage", "enable-automation",
-            "--disable-setuid-sandbox","-disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
-            "--disable-extensions","--dns-prefetch-disable","--disable-gpu",
+            "--disable-setuid-sandbox","--disable-dev-shm-usage","--disable-blink-features=AutomationControlled",
+            "--disable-extensions","--dns-prefetch-disable","--disable-gpu","--ignore-certificate-errors",
             "--start-maximized","--user-data-dir=./userData");
 
     public WebDriver getDriver() {

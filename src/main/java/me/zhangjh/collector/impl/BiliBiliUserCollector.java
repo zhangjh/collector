@@ -49,6 +49,9 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
     protected void handle(String url, CollectorContext context) {
         WebDriver driver = context.getWebDriver();
         driver.get(url);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#page-channel .content")));
+
         Document document = Jsoup.parse(driver.getPageSource());
 
         Elements content = document.select("#page-channel .content");
