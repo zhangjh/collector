@@ -3,4 +3,4 @@
 if [ ! -d $1 ];then
     mkdir -p $1
 fi
-you-get --playlist -o $1 $2
+you-get --playlist --no-caption -o $1 $2

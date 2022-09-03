@@ -1,5 +1,6 @@
 package me.zhangjh.collector.crawler;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
@@ -38,7 +39,8 @@ public class Crawler {
         options.addArguments(ARG_LIST);
         options.setPageLoadStrategy(PageLoadStrategy.EAGER);
         ChromeDriver driver = new ChromeDriver(options);
-        driver.manage().window().maximize();
+        Dimension dimension = new Dimension(1920, 1080);
+        driver.manage().window().setSize(dimension);
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(50));
         driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(5));
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));

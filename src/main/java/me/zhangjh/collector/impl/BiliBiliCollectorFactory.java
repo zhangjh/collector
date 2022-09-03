@@ -48,8 +48,11 @@ public class BiliBiliCollectorFactory {
     private Crawler crawler;
 
     @PostConstruct
-    public void init() {
+    public void init() throws Exception {
         driver = crawler.getDriver();
+
+        Runtime.getRuntime().exec("ps -ef | grep chrome | awk '{print $2}' | xargs kill -9").waitFor();
+        Runtime.getRuntime().exec("ps -ef | grep you-get | awk '{print $2}' | xargs kill -9").waitFor();
     }
 
     private BiliBiliCollectorInstance getInstance(BiliTypeEnum type) {
