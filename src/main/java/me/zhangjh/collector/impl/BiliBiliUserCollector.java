@@ -70,10 +70,12 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
             // 页面点击还得借助无头浏览器
             Elements hasMore = chanelItem.select(".btn.more-btn");
             if(hasMore.isEmpty()) {
+                wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(chanelItem.cssSelector())));
                 driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
                 collectUrls(driver, context, true);
             } else {
                 for (Element hasMoreBtn : hasMore) {
+                    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(chanelItem.cssSelector())));
                     driver.findElement(By.cssSelector(hasMoreBtn.cssSelector())).click();
                     collectUrls(driver, context, true);
                 }
@@ -105,6 +107,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         if(!channelItemDocument.select(".be-pager").attr("style").contains("display: none")) {
             // 翻到头了
             if(channelItemDocument.select(".be-pager-next.be-pager-disabled").isEmpty()) {
+                wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".be-pager-next")));
                 driver.findElement(By.cssSelector(".be-pager-next")).click();
                 collectUrls(driver, context, false);
             }
