@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import me.zhangjh.collector.entity.CollectorContext;
 import me.zhangjh.collector.entity.Torrent;
 import me.zhangjh.collector.util.DownloadUtil;
+import me.zhangjh.collector.util.WebdriverCaptureUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -62,6 +63,9 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         }
 
         System.out.println("chanelItems size: " + chanelItems.size());
+        if(chanelItems.size() == 0) {
+            WebdriverCaptureUtil.capture(driver, "screenshot");
+        }
         for (Element chanelItem : chanelItems) {
             // 页面点击还得借助无头浏览器
             Elements hasMore = chanelItem.select(".btn.more-btn");
