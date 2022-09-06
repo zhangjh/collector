@@ -25,7 +25,7 @@ public abstract class BiliBiliCollectorInstance {
     protected CloseableHttpClient client = HttpClients.createDefault();
 
     protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
-            2, 5, 10,TimeUnit.SECONDS,
+            5, 10, 10,TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),
                     new ThreadPoolExecutor.CallerRunsPolicy());
 
