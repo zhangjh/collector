@@ -1,5 +1,6 @@
 package me.zhangjh.collector.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.ruiyun.jvppeteer.core.page.Page;
 import lombok.SneakyThrows;
 import me.zhangjh.collector.entity.CollectorContext;
@@ -11,6 +12,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -71,10 +74,10 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         System.out.println("channelTitle:" + channelTitle + ",channelItemContent size: " + channelItemContent.size());
         for (Element element : channelItemContent) {
             String channelItemHref = element.select("a").attr("href");
-            // 一次push两条：title+url
             if(StringUtils.isNotBlank(channelTitle) && StringUtils.isNotBlank(channelItemHref)) {
-                jedis.rpush(context.getRedisBucket() + "/urls", channelTitle);
-                jedis.rpush(context.getRedisBucket() + "/urls", channelItemHref);
+                Map<String, String> map = new HashMap<>(1);
+                map.put(channelTitle, channelItemHref);
+                jedis.rpush(context.getRedisBucket() + "/urls", JSON.toJSONString(map));
             }
         }
         // 如果有下一页的话翻页获取下一页

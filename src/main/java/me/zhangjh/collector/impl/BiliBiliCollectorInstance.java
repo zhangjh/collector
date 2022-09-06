@@ -7,9 +7,11 @@ import me.zhangjh.collector.util.DownloadUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.springframework.util.Assert;
 import redis.clients.jedis.Jedis;
 
 import java.io.File;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -50,21 +52,23 @@ public abstract class BiliBiliCollectorInstance {
     protected void start2Download(CollectorContext context) {
         System.out.println("start2Download");
         Jedis jedis = context.getJedis();
-        // 相应地，一次要pop两条
-        String channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
-        String channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
-        while (StringUtils.isNotBlank(channelItemHref)) {
+        String redisRet = jedis.lpop(context.getRedisBucket() + "/urls");
+        while (StringUtils.isNotBlank(redisRet)) {
+            Map<String, String> map = JSONObject.parseObject(redisRet, Map.class);
             try {
                 lock.acquire();
-                if(!channelItemHref.startsWith("https")) {
-                    channelItemHref = "https:" + channelItemHref;
+                Assert.isTrue(map.entrySet().size() == 1, "缓存数据不符合预期");
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    String channelTitle = entry.getKey();
+                    String channelItemHref = entry.getValue();
+                    if(!channelItemHref.startsWith("https")) {
+                        channelItemHref = "https:" + channelItemHref;
+                    }
+                    final String finalResUrl = channelItemHref;
+                    executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
+                            + File.separator + channelTitle, finalResUrl));
+                    redisRet = jedis.lpop(context.getRedisBucket() + "/urls");
                 }
-                final String finalResUrl = channelItemHref;
-                String finalChannelTitle = channelTitle;
-                executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
-                        + File.separator + finalChannelTitle, finalResUrl));
-                channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
-                channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
