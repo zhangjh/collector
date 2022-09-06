@@ -25,8 +25,8 @@ public abstract class BiliBiliCollectorInstance {
     protected CloseableHttpClient client = HttpClients.createDefault();
 
     protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
-            5, 10, 10,TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),
+            1, 2, 10,TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(5), Executors.defaultThreadFactory(),
                     new ThreadPoolExecutor.CallerRunsPolicy());
 
     protected void mkdir(String downloadPath) {
