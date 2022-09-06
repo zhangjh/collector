@@ -1,18 +1,19 @@
 package me.zhangjh.collector.crawler;
 
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.PageLoadStrategy;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import com.ruiyun.jvppeteer.core.Puppeteer;
+import com.ruiyun.jvppeteer.core.browser.Browser;
+import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
+import com.ruiyun.jvppeteer.core.page.Page;
+import com.ruiyun.jvppeteer.options.LaunchOptions;
+import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author zhangjh
@@ -33,23 +34,22 @@ public class Crawler {
             "--disable-extensions","--dns-prefetch-disable","--disable-gpu","--ignore-certificate-errors",
             "--start-maximized","--user-data-dir=./userData");
 
-    public WebDriver getDriver() {
-        ChromeOptions options = new ChromeOptions();
-        options.setHeadless(headless);
-        options.addArguments(ARG_LIST);
-        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
-        ChromeDriver driver = new ChromeDriver(options);
-        Dimension dimension = new Dimension(1920, 1080);
-        driver.manage().window().setSize(dimension);
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(50));
-        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(5));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-
+    public Page getPage() throws IOException, ExecutionException, InterruptedException {
+        BrowserFetcher.downloadIfNotExist(null);
+        LaunchOptions options = new LaunchOptionsBuilder()
+                .withArgs(ARG_LIST)
+                .withHeadless(headless).build();
+        options.setDevtools(false);
+        options.setViewport(null);
+        Browser browser = Puppeteer.launch(options);
+        Page page = browser.newPage();
+        page.setDefaultNavigationTimeout(0);
+        page.setUserAgent(USER_AGENT);
         List<String> scripts = hideHeadlessScripts();
         for (String script : scripts) {
-            ((JavascriptExecutor) driver).executeScript(script);
+            page.evaluateOnNewDocument(script);
         }
-        return driver;
+        return page;
     }
 
     private List<String> hideHeadlessScripts() {

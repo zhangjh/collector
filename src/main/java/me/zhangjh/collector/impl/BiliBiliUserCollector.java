@@ -1,6 +1,7 @@
 package me.zhangjh.collector.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ruiyun.jvppeteer.core.page.Page;
 import lombok.SneakyThrows;
 import me.zhangjh.collector.entity.CollectorContext;
 import me.zhangjh.collector.entity.Torrent;
@@ -11,14 +12,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import redis.clients.jedis.Jedis;
 
 import java.io.File;
-import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author zhangjh
@@ -48,12 +45,12 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
     @Override
     @SneakyThrows
     protected void handle(String url, CollectorContext context) {
-        WebDriver driver = context.getWebDriver();
-        driver.get(url);
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#page-channel .content")));
+        Page page = context.getPage();
+        page.goTo(url);
 
-        Document document = Jsoup.parse(driver.getPageSource());
+        page.waitForSelector("#page-channel .content");
+
+        Document document = Jsoup.parse(page.content());
 
         Elements content = document.select("#page-channel .content");
         Elements chanelItems = content.select(".channel-item");
@@ -64,20 +61,20 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
 
         System.out.println("chanelItems size: " + chanelItems.size());
         if(chanelItems.size() == 0) {
-            WebdriverCaptureUtil.capture(driver, "screenshot");
+            WebdriverCaptureUtil.capture(page, "screenshot");
         }
         for (Element chanelItem : chanelItems) {
             // 页面点击还得借助无头浏览器
             Elements hasMore = chanelItem.select(".btn.more-btn");
             if(hasMore.isEmpty()) {
-                wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(chanelItem.cssSelector())));
-                driver.findElement(By.cssSelector(chanelItem.cssSelector())).click();
-                collectUrls(driver, context, true);
+                page.waitForSelector(chanelItem.cssSelector());
+                page.click(chanelItem.cssSelector());
+                collectUrls(page, context, true);
             } else {
                 for (Element hasMoreBtn : hasMore) {
-                    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(chanelItem.cssSelector())));
-                    driver.findElement(By.cssSelector(hasMoreBtn.cssSelector())).click();
-                    collectUrls(driver, context, true);
+                    page.waitForSelector(hasMoreBtn.cssSelector());
+                    page.click(hasMoreBtn.cssSelector());
+                    collectUrls(page, context, true);
                 }
             }
         }
@@ -85,13 +82,12 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
     }
 
     // 分页递归的时候不需要后退，否则递归会导致多次后退
-    private void collectUrls(WebDriver driver, CollectorContext context, boolean needBack) {
+    private void collectUrls(Page page, CollectorContext context, boolean needBack) throws ExecutionException, InterruptedException {
         System.out.println("start collectUrls");
         Jedis jedis = context.getJedis();
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".content")));
+        page.waitForSelector(".video-list > li");
 
-        Document channelItemDocument = Jsoup.parse(driver.getPageSource());
+        Document channelItemDocument = Jsoup.parse(page.content());
         String channelTitle = channelItemDocument.select(".item.cur").text();
         Elements channelItemContent = channelItemDocument.select(".video-list > li");
         System.out.println("channelItemContent size: " + channelItemContent.size());
@@ -107,13 +103,13 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         if(!channelItemDocument.select(".be-pager").attr("style").contains("display: none")) {
             // 翻到头了
             if(channelItemDocument.select(".be-pager-next.be-pager-disabled").isEmpty()) {
-                wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".be-pager-next")));
-                driver.findElement(By.cssSelector(".be-pager-next")).click();
-                collectUrls(driver, context, false);
+                page.waitForSelector(".be-pager-next");
+                page.click(".be-pager-next");
+                collectUrls(page, context, false);
             }
         }
         if(needBack) {
-            driver.navigate().back();
+            page.evaluate("window.history.go(-1)");
         }
     }
 

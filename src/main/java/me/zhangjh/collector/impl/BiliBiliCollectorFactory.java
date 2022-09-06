@@ -1,11 +1,11 @@
 package me.zhangjh.collector.impl;
 
+import com.ruiyun.jvppeteer.core.page.Page;
 import me.zhangjh.collector.crawler.Crawler;
 import me.zhangjh.collector.entity.BiliTypeEnum;
 import me.zhangjh.collector.entity.CollectorContext;
 import me.zhangjh.collector.entity.Torrent;
 import me.zhangjh.collector.util.WebdriverCaptureUtil;
-import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ public class BiliBiliCollectorFactory {
         MAP.put(BiliTypeEnum.ITEM, new BiliBiliItemCollector());
     }
 
-    private WebDriver driver;
+    private Page page;
 
     @Value("${bilibili.download.path}")
     private String downloadPre;
@@ -49,7 +49,7 @@ public class BiliBiliCollectorFactory {
 
     @PostConstruct
     public void init() throws Exception {
-        driver = crawler.getDriver();
+        page = crawler.getPage();
 
         Runtime.getRuntime().exec("ps -ef | grep chrome | awk '{print $2}' | xargs kill -9").waitFor();
         Runtime.getRuntime().exec("ps -ef | grep you-get | awk '{print $2}' | xargs kill -9").waitFor();
@@ -61,7 +61,7 @@ public class BiliBiliCollectorFactory {
 
     public void run(List<Torrent> torrents) {
         CollectorContext context = new CollectorContext();
-        context.setWebDriver(driver);
+        context.setPage(page);
         try {
             for (Torrent torrent : torrents) {
                 String type = torrent.getType();
@@ -81,9 +81,9 @@ public class BiliBiliCollectorFactory {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            WebdriverCaptureUtil.capture(driver, "screenshot");
+            WebdriverCaptureUtil.capture(page, "screenshot");
         } finally {
-            driver.quit();
+            page.browser().close();
         }
     }
 
@@ -98,7 +98,11 @@ public class BiliBiliCollectorFactory {
             jedis.del(redisBucket);
             jedis.del(redisBucket + "/urls");
 
-            driver.close();
+            try {
+                page.close();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }));
     }
 }

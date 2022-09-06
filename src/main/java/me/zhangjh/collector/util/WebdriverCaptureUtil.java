@@ -1,9 +1,7 @@
 package me.zhangjh.collector.util;
 
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
+import com.ruiyun.jvppeteer.core.page.Page;
+import com.ruiyun.jvppeteer.options.ScreenshotOptions;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,12 +12,13 @@ import java.io.IOException;
  */
 public class WebdriverCaptureUtil {
 
-    public static void capture(WebDriver driver, String capturePath) {
-        File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+    public static void capture(Page page, String capturePath) {
+        ScreenshotOptions options = new ScreenshotOptions();
+        options.setType("png");
+        options.setPath(System.getProperty("user.dir") + File.separator
+                + capturePath + File.separator + System.currentTimeMillis() + ".png");
         try {
-            FileUtils.copyFile(screenshot,
-                    new File(System.getProperty("user.dir") + File.separator
-                            + capturePath + File.separator + System.currentTimeMillis() + ".png"));
+            page.screenshot(options);
         } catch (IOException ignored) {
         }
     }
