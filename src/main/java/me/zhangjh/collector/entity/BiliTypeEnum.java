@@ -13,7 +13,7 @@ import java.util.Optional;
 public enum BiliTypeEnum {
 
     USER("user", "用户类型"),
-    ITEM("item", "节目类型"),
+    ITEM("items", "节目类型"),
     ;
 
     private String type;

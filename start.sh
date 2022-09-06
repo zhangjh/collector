@@ -23,10 +23,10 @@ if [ $? -ne 0 ];then
 fi
 
 ## 下载安装chromedriver驱动
-which chromedriver
-if [ $? -ne 0 ];then
-    apt -y install chromium-chromedriver
-fi
+#which chromedriver
+#if [ $? -ne 0 ];then
+#    apt -y install chromium-chromedriver
+#fi
 
 ## 安装mvn
 which mvn

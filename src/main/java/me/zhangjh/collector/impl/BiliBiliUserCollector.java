@@ -1,11 +1,8 @@
 package me.zhangjh.collector.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.ruiyun.jvppeteer.core.page.Page;
 import lombok.SneakyThrows;
 import me.zhangjh.collector.entity.CollectorContext;
-import me.zhangjh.collector.entity.Torrent;
-import me.zhangjh.collector.util.DownloadUtil;
 import me.zhangjh.collector.util.WebdriverCaptureUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
@@ -14,7 +11,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import redis.clients.jedis.Jedis;
 
-import java.io.File;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -23,24 +19,6 @@ import java.util.concurrent.ExecutionException;
  * b站用户空间合集视频获取
  */
 public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
-
-    @Override
-    protected void run(CollectorContext context) {
-        String name = context.getTorrent().getName();
-        String downloadPath = context.getDownloadPre() + "/" + name;
-        context.setDownloadPath(downloadPath);
-
-        // 加到redis队列尾部
-        Jedis jedis = context.getJedis();
-        jedis.rpush(context.getRedisBucket(), JSONObject.toJSONString(context.getTorrent()));
-        String qValue = jedis.lpop(context.getRedisBucket());
-        while (StringUtils.isNotBlank(qValue)) {
-            Torrent torrent = JSONObject.parseObject(qValue, Torrent.class);
-            System.out.println("start handle: " + torrent.getName());
-            this.handle(torrent.getUrl(), context);
-            qValue = jedis.lpop(context.getRedisBucket());
-        }
-    }
 
     @Override
     @SneakyThrows
@@ -90,7 +68,7 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         Document channelItemDocument = Jsoup.parse(page.content());
         String channelTitle = channelItemDocument.select(".item.cur").text();
         Elements channelItemContent = channelItemDocument.select(".video-list > li");
-        System.out.println("channelItemContent size: " + channelItemContent.size());
+        System.out.println("channelTitle:" + channelTitle + ",channelItemContent size: " + channelItemContent.size());
         for (Element element : channelItemContent) {
             String channelItemHref = element.select("a").attr("href");
             // 一次push两条：title+url
@@ -110,25 +88,6 @@ public class BiliBiliUserCollector extends BiliBiliCollectorInstance {
         }
         if(needBack) {
             page.evaluate("window.history.go(-1)");
-        }
-    }
-
-    private void start2Download(CollectorContext context) {
-        System.out.println("start2Download");
-        Jedis jedis = context.getJedis();
-        // 相应地，一次要pop两条
-        String channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
-        String channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
-        while (StringUtils.isNotBlank(channelItemHref)) {
-            if(!channelItemHref.startsWith("https")) {
-                channelItemHref = "https:" + channelItemHref;
-            }
-            final String finalResUrl = channelItemHref;
-            String finalChannelTitle = channelTitle;
-            executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
-                    + File.separator + finalChannelTitle, finalResUrl));
-            channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
-            channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         }
     }
 }
