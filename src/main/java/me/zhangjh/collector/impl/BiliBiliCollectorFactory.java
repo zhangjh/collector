@@ -49,6 +49,8 @@ public class BiliBiliCollectorFactory {
 
     @PostConstruct
     public void init() throws Exception {
+        this.shutdownHook();
+
         page = crawler.getPage();
 
         Runtime.getRuntime().exec("ps -ef | grep chrome | awk '{print $2}' | xargs kill -9").waitFor();
@@ -100,6 +102,7 @@ public class BiliBiliCollectorFactory {
 
             try {
                 page.close();
+                page.browser().close();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
