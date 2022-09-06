@@ -3,7 +3,7 @@
 if [ ! -d $1 ];then
     mkdir -p $1
 fi
-if [ $3 -ne '' ];then
+if [ "X$3" -ne 'X' ];then
     you-get --playlist -o $1 $2
 else
     you-get --playlist --no-caption -o $1 $2
