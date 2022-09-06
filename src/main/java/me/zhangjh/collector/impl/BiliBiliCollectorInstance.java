@@ -7,14 +7,10 @@ import me.zhangjh.collector.util.DownloadUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.springframework.util.Assert;
 import redis.clients.jedis.Jedis;
 
 import java.io.File;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author zhangjh
@@ -26,17 +22,11 @@ public abstract class BiliBiliCollectorInstance {
 
     protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
             1, 2, 10,TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(500), Executors.defaultThreadFactory(),
-                    new ThreadPoolExecutor.AbortPolicy());
+            new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),
+                    new ThreadPoolExecutor.CallerRunsPolicy());
 
-    protected void mkdir(String downloadPath) {
-        // 创建下载路径
-        File dir = new File(downloadPath);
-        if(!dir.exists()) {
-            boolean mkdirsRet = dir.mkdirs();
-            Assert.isTrue(mkdirsRet, "创建目录失败:" + dir.getAbsolutePath());
-        }
-    }
+    /** 确保最多只有2个任务放入线程池中执行 */
+    protected Semaphore lock = new Semaphore(2);
 
     protected void run(CollectorContext context) {
         String name = context.getTorrent().getName();
@@ -64,15 +54,22 @@ public abstract class BiliBiliCollectorInstance {
         String channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
         String channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         while (StringUtils.isNotBlank(channelItemHref)) {
-            if(!channelItemHref.startsWith("https")) {
-                channelItemHref = "https:" + channelItemHref;
+            try {
+                lock.acquire();
+                if(!channelItemHref.startsWith("https")) {
+                    channelItemHref = "https:" + channelItemHref;
+                }
+                final String finalResUrl = channelItemHref;
+                String finalChannelTitle = channelTitle;
+                executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
+                        + File.separator + finalChannelTitle, finalResUrl));
+                channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
+                channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                lock.release();
             }
-            final String finalResUrl = channelItemHref;
-            String finalChannelTitle = channelTitle;
-            executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
-                    + File.separator + finalChannelTitle, finalResUrl));
-            channelTitle = jedis.lpop(context.getRedisBucket() + "/urls");
-            channelItemHref = jedis.lpop(context.getRedisBucket() + "/urls");
         }
     }
 }
