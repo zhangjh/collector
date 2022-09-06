@@ -62,10 +62,10 @@ public class BiliBiliCollectorFactory {
     }
 
     public void run(List<Torrent> torrents) {
-        CollectorContext context = new CollectorContext();
-        context.setPage(page);
         try {
             for (Torrent torrent : torrents) {
+                CollectorContext context = new CollectorContext();
+                context.setPage(page);
                 String type = torrent.getType();
                 Optional<BiliTypeEnum> biliTypeEnum = BiliTypeEnum.getEnumByType(type);
                 if(biliTypeEnum.isPresent()) {

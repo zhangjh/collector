@@ -53,6 +53,7 @@ public abstract class BiliBiliCollectorInstance {
         System.out.println("start2Download");
         Jedis jedis = context.getJedis();
         String redisRet = jedis.lpop(context.getRedisBucket() + "/urls");
+        System.out.println("redisRet: " + redisRet);
         while (StringUtils.isNotBlank(redisRet)) {
             Map<String, String> map = JSONObject.parseObject(redisRet, Map.class);
             try {
