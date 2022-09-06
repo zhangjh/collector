@@ -22,6 +22,7 @@ spring:
     host: 1.117.220.23
     port: 6379
     password: redis_passwd
+    requirePass: false
     bucket: bilibili.url.queue
   #解决程序读配置文件乱码问题
   message:

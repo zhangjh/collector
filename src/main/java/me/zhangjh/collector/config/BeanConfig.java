@@ -20,8 +20,18 @@ public class BeanConfig {
     @Value("${spring.redis.port}")
     private Integer redisPort;
 
+    @Value("${spring.redis.requirePass}")
+    private boolean requirePass;
+
+    @Value("${spring.redis.password}")
+    private String password;
+
     @Bean
     public Jedis jedis() {
-        return new Jedis(redisHost, redisPort);
+        Jedis jedis = new Jedis(redisHost, redisPort);
+        if(requirePass) {
+            jedis.auth(password);
+        }
+        return jedis;
     }
 }
