@@ -26,8 +26,8 @@ public abstract class BiliBiliCollectorInstance {
 
     protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
             1, 2, 10,TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(5), Executors.defaultThreadFactory(),
-                    new ThreadPoolExecutor.CallerRunsPolicy());
+            new ArrayBlockingQueue<>(500), Executors.defaultThreadFactory(),
+                    new ThreadPoolExecutor.AbortPolicy());
 
     protected void mkdir(String downloadPath) {
         // 创建下载路径
