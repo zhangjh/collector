@@ -1,5 +1,7 @@
 browser:
   headless: true
+  autoDownload: false
+  executePath: chromium
 
 bilibili:
   download:

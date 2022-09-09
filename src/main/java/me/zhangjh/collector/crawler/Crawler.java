@@ -26,6 +26,12 @@ public class Crawler {
     @Value("${browser.headless}")
     private boolean headless;
 
+    @Value("${browser.autoDownload}")
+    private boolean autoDownload;
+
+    @Value("${browser.executePath}")
+    private String executePath;
+
     private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36";
 
     private static final List<String> ARG_LIST = Arrays.asList("--no-sandbox","--incognito",
@@ -35,10 +41,16 @@ public class Crawler {
             "--start-maximized","--user-data-dir=./userData");
 
     public Page getPage() throws IOException, ExecutionException, InterruptedException {
-        BrowserFetcher.downloadIfNotExist(null);
-        LaunchOptions options = new LaunchOptionsBuilder()
+        LaunchOptionsBuilder optionsBuilder = new LaunchOptionsBuilder()
                 .withArgs(ARG_LIST)
-                .withHeadless(headless).build();
+                .withHeadless(headless);
+        // 是否自动下载，不下载时可以指定可执行路径
+        if(autoDownload) {
+            BrowserFetcher.downloadIfNotExist(null);
+        } else {
+            optionsBuilder.withExecutablePath(executePath);
+        }
+        LaunchOptions options = optionsBuilder.build();
         options.setDevtools(false);
         options.setViewport(null);
         Browser browser = Puppeteer.launch(options);
