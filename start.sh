@@ -13,7 +13,7 @@ fi
 ## you-get
 which you-get
 if [ $? -ne 0 ];then
-    apt -y install you-get
+    pip3 install --upgrade you-get
 fi
 
 ## redis
