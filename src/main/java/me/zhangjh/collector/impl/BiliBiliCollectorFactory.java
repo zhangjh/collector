@@ -81,6 +81,7 @@ public class BiliBiliCollectorFactory {
                     collector.run(context);
                 }
             }
+            System.out.println("run finished");
         } catch (Exception e) {
             e.printStackTrace();
             WebdriverCaptureUtil.capture(page, "screenshot");

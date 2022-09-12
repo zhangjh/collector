@@ -45,6 +45,7 @@ public abstract class BiliBiliCollectorInstance {
             this.handle(torrent.getUrl(), context);
             qValue = jedis.lpop(context.getRedisBucket());
         }
+        System.out.println("BiliBiliCollectorInstance run finished");
     }
 
     protected abstract void handle(String url, CollectorContext context);
