@@ -23,8 +23,8 @@ public abstract class BiliBiliCollectorInstance {
     protected CloseableHttpClient client = HttpClients.createDefault();
 
     protected ThreadPoolExecutor executors = new ThreadPoolExecutor(
-            1, 2, 10,TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),
+            2, 5, 0,TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
                     new ThreadPoolExecutor.CallerRunsPolicy());
 
     /** 确保最多只有2个任务放入线程池中执行 */
@@ -57,24 +57,20 @@ public abstract class BiliBiliCollectorInstance {
         System.out.println("redisRet: " + redisRet);
         while (StringUtils.isNotBlank(redisRet)) {
             Map<String, String> map = JSONObject.parseObject(redisRet, Map.class);
-            try {
-                lock.acquire();
-                Assert.isTrue(map.entrySet().size() == 1, "缓存数据不符合预期");
-                for (Map.Entry<String, String> entry : map.entrySet()) {
-                    String channelTitle = entry.getKey();
-                    String channelItemHref = entry.getValue();
-                    if(!channelItemHref.startsWith("https")) {
-                        channelItemHref = "https:" + channelItemHref;
-                    }
-                    final String finalResUrl = channelItemHref;
-                    executors.submit(() -> DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
-                            + File.separator + channelTitle, finalResUrl));
-                    redisRet = jedis.lpop(context.getRedisBucket() + "/urls");
+            Assert.isTrue(map.entrySet().size() == 1, "缓存数据不符合预期");
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                String channelTitle = entry.getKey();
+                String channelItemHref = entry.getValue();
+                if(!channelItemHref.startsWith("https")) {
+                    channelItemHref = "https:" + channelItemHref;
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                lock.release();
+                final String finalResUrl = channelItemHref;
+                executors.submit(() -> {
+                    DownloadUtil.downloadAndPrintLog(context.getDownloadPath()
+                            + File.separator + channelTitle, finalResUrl);
+                    // 任务完成释放并发锁资源
+                });
+                redisRet = jedis.lpop(context.getRedisBucket() + "/urls");
             }
         }
     }
