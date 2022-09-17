@@ -45,6 +45,9 @@ public class BiliBiliCollectorFactory {
     private Integer redisPort;
 
     @Autowired
+    private Jedis jedis;
+
+    @Autowired
     private Crawler crawler;
 
     @PostConstruct
@@ -73,7 +76,6 @@ public class BiliBiliCollectorFactory {
                     context.setTorrent(torrent);
                     context.setDownloadPre(downloadPre);
                     context.setRedisBucket(redisBucket);
-                    Jedis jedis = new Jedis(redisHost, redisPort);
                     context.setJedis(jedis);
                     // 开始运行前，初始化redis，防止上次异常退出redis有数据残留
                     jedis.del(redisBucket);
