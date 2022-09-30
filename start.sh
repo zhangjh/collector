@@ -66,4 +66,4 @@ if [[ "X$1" == "Xpackage" ]];then
         exit -1
     fi
 fi
-nohup mvn spring-boot:run &
+nohup mvn spring-boot:run >> nohup.out &
